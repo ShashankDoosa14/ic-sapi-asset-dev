@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:tls="http://www.mulesoft.org/schema/mule/tls" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd  http://www.mulesoft.org/schema/mule/tls http://www.mulesoft.org/schema/mule/tls/current/mule-tls.xsd">
+    <http:listener-config name="ic-sfdc-sapi-asset-httpListenerConfig">
+        <http:listener-connection host="0.0.0.0" port="8083" protocol="HTTPS">
+            <tls:context>
+                <tls:key-store type="jks" path="keystore\server-keystore.jks" keyPassword="mulesoft" password="mulesoft" />
+            </tls:context>
+        </http:listener-connection>
+    </http:listener-config>
+    <apikit:config name="ic-sfdc-sapi-asset-config" api="ic-sfdc-sapi-asset.raml" outboundHeadersMapName="outboundHeaders" httpStatusVarName="httpStatus" />
+    <flow name="ic-sfdc-sapi-asset-main">
+        <http:listener config-ref="ic-sfdc-sapi-asset-httpListenerConfig" path="/api/*">
+            <http:response statusCode="#[vars.httpStatus default 200]">
+                <http:headers>#[vars.outboundHeaders default {}]</http:headers>
+            </http:response>
+            <http:error-response statusCode="#[vars.httpStatus default 500]">
+                <http:body>#[payload]</http:body>
+                <http:headers>#[vars.outboundHeaders default {}]</http:headers>
+            </http:error-response>
+        </http:listener>
+        <apikit:router config-ref="ic-sfdc-sapi-asset-config" />
+        <error-handler ref="Error_Handler" />
+    </flow>
+    <flow name="ic-sfdc-sapi-asset-console">
+        <http:listener config-ref="ic-sfdc-sapi-asset-httpListenerConfig" path="/console/*">
+            <http:response statusCode="#[vars.httpStatus default 200]">
+                <http:headers>#[vars.outboundHeaders default {}]</http:headers>
+            </http:response>
+            <http:error-response statusCode="#[vars.httpStatus default 500]">
+                <http:body>#[payload]</http:body>
+                <http:headers>#[vars.outboundHeaders default {}]</http:headers>
+            </http:error-response>
+        </http:listener>
+        <apikit:console config-ref="ic-sfdc-sapi-asset-config" />
+        <error-handler>
+            <on-error-propagate type="APIKIT:NOT_FOUND">
+                <ee:transform doc:name="Transform Message">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Resource not found"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">404</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+        </error-handler>
+    </flow>
+    <flow name="put:\asset\(id):application\json:ic-sfdc-sapi-asset-config">
+        <flow-ref doc:name="Flow Reference" doc:id="939717ef-601d-4e89-8f00-b45e9801d0a5" name="delete-asset-implementation" />
+        <error-handler ref="Error_Handler" />
+    </flow>
+    <flow name="delete:\asset\(id):ic-sfdc-sapi-asset-config">
+        <flow-ref doc:name="Flow Reference" doc:id="2fc5fb63-b153-419c-8650-6bb1fdd1d9f2" name="delete-asset-implementation" />
+    </flow>
+    <flow name="get:\asset:ic-sfdc-sapi-asset-config">
+        <flow-ref doc:name="Flow Reference" doc:id="d2b25852-442e-43cf-bb4f-9ab210094fd7" name="getAll-assets-implementation" />
+    </flow>
+    <flow name="get:\asset\(id):ic-sfdc-sapi-asset-config">
+        <flow-ref doc:name="Flow Reference" doc:id="4d835021-8dde-475b-ad3b-0136070610e4" name="get-by-id-asset-implementation" />
+    </flow>
+    <flow name="post:\asset:application\json:ic-sfdc-sapi-asset-config">
+        <flow-ref doc:name="Flow Reference" doc:id="bd8e215b-aa48-46ee-a634-946377d52b7b" name="create-asset-implementation" />
+    </flow>
+</mule>

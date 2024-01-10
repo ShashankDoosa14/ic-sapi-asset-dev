@@ -1,0 +1,83 @@
+#%RAML 1.0
+title: ic-sfdc-sapi
+description: Salesforce Assets Object System API 
+version: v1
+
+protocols: [HTTPS]
+mediaType:
+  - application/json
+
+traits:
+  client-id-required:
+      headers:
+        client_id:
+          type: string
+        client_secret:
+          type: string
+  trackingParams:
+    headers:
+      X-Correlation-ID:
+        description: A unique identifier for this message, to enable tracking, reporting, and correlation.
+        type: string
+        required: true
+
+resourceTypes:
+  AllResourceType: !include /resourceType/AllResourceType.raml
+  
+uses:
+  ErrorDataType: /resources/library/ErrorsDataTypes.raml
+  PostDataType: /resources/library/PostDataType.raml
+  GetByIdDataType: /resources/library/GetByIdDataType.raml
+  PutDataType: /resources/library/PutDataType.raml
+  DeleteDataType: /resources/library/DeleteDataType.raml 
+
+/asset:
+  description: this is used to get and post all the details 
+  type:
+    AllResourceType:
+      post-request-schema: PostDataType.post_request
+      post-request-example: !include /examples/request/postAssetRequestExample.json
+      post-response-schema: PostDataType.post_response
+      post-response-example: !include /examples/responces/postAssetResponseExample.json
+      get-response-schema: GetByIdDataType.get_by_id_response
+      get-response-example: !include /examples/responces/getAllAssetResponseExample.json
+      errors-schema: ErrorDataType.error
+  post:
+    is:
+      - client-id-required
+      - trackingParams
+
+  get:
+    is:
+      - client-id-required
+      - trackingParams
+    
+  /{id}:
+    type:
+      AllResourceType:
+        get-response-schema: GetByIdDataType.get_by_id_response
+        get-response-example: !include /examples/responces/getByIdAssetResponseExample.json
+        put-request-schema: PutDataType.put_request
+        put-request-example: !include /examples/request/putAssetRequestExample.json
+        put-response-schema: PutDataType.put_response
+        put-response-example: !include /examples/responces/putAssetResponseExample.json
+        delete-response-schema: DeleteDataType.delete_response
+        delete-response-example: !include /examples/responces/deleteAssetResponseExample.json
+        errors-schema: ErrorDataType.error
+    get:
+      is:
+      - client-id-required
+      - trackingParams
+    put:
+      is:
+        - client-id-required
+        - trackingParams
+    
+    delete:
+      is:
+      - client-id-required
+      - trackingParams
+   
+      
+
+    

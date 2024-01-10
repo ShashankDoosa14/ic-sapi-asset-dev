@@ -1,0 +1,44 @@
+#%RAML 1.0 Library
+types:
+  put_request:
+    description: Update DataTypes 
+    type: object
+    properties:
+      id:
+        type: string
+        required: false
+      description:
+        type: string
+        required: false
+      name:
+        type: string
+        required: true
+      status:
+        type: string
+        required: false
+      quantity:
+        type: number
+        required: false
+      price:
+        type: number
+        required: false
+      
+
+  put_response:
+    description: updated Response
+    properties:
+      is_success :
+        description: Success
+        type: boolean
+        required: true
+      response:
+        type: array
+        items:
+          type: object
+          properties:
+           payload:
+            type: object
+            properties:
+              success: boolean
+              id: string
+              errors: array
